@@ -29,7 +29,7 @@ Later, the same setup is migrated to **AKS** with minimal changes.
 
 ## 🧰 Prerequisites (One-Time Setup)
 
-Make sure the following tools are installed on your **WSL2 Ubuntu system**:
+Make sure the following tools are installed on your **WSL2 Ubuntu system / any Linux distro**:
 
 | Tool       | Purpose                                    |
 | ---------- | ------------------------------------------ |
