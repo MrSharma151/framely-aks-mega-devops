@@ -1,0 +1,63 @@
+# ======================================================================
+# ArgoCD Project: framely
+#
+# Purpose:
+# - Define a logical boundary for all Framely applications
+# - Restrict where applications can be deployed
+# - Restrict which Git repositories can be used
+#
+# Why ArgoCD Project?
+# - Enforces security and governance
+# - Prevents accidental deployments to wrong namespaces
+# - Matches real-world enterprise GitOps practices
+#
+# This project will be used by:
+# - Stage ArgoCD Application (local KIND testing)
+# - Future Production ArgoCD Application (AKS)
+# ======================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: framely
+  namespace: argocd                 # ArgoCD control-plane namespace
+spec:
+  description: Framely GitOps Project (Stage & Production)
+
+  # --------------------------------------------------------------------
+  # Source repositories allowed for this project
+  # --------------------------------------------------------------------
+  sourceRepos:
+    - '*'                            # Allow this Git repository
+                                     # (Can be restricted later)
+
+  # --------------------------------------------------------------------
+  # Destinations where applications are allowed to deploy
+  # --------------------------------------------------------------------
+  destinations:
+    # Stage environment (local KIND / pre-prod)
+    - namespace: framely-stage
+      server: https://kubernetes.default.svc
+
+    # Production environment (will be enabled later)
+    - namespace: framely-prod
+      server: https://kubernetes.default.svc
+
+  # --------------------------------------------------------------------
+  # Kubernetes resource whitelisting
+  # --------------------------------------------------------------------
+  # Which cluster-scoped resources are allowed
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+
+  # Which namespace-scoped resources are allowed
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # --------------------------------------------------------------------
+  # Optional: Orphaned resource cleanup settings
+  # --------------------------------------------------------------------
+  orphanedResources:
+    warn: true
