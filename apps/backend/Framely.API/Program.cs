@@ -246,7 +246,7 @@ using (var scope = app.Services.CreateScope())
             {
                 await userManager.AddToRoleAsync(adminUser, "ADMIN");
 
-                Console.WriteLine("✅ DEFAULT ADMIN CREATED");
+                Console.WriteLine("✅ DEFAULT ADMIN CREATED, please update credentials from the default one!");
                 Console.WriteLine($"📧 {adminEmail}");
                 Console.WriteLine($"🔑 {adminPassword}");
             }

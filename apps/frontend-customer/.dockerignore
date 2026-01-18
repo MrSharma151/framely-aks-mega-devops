@@ -26,3 +26,12 @@ babel.config.js
 # Env files (frontend me env use nahi kar rahe, still safe)
 .env
 .env.*
+
+# Dockerfiles
+Dockerfile*
+.dockerignore
+docker-compose.yml
+
+# Misc
+dist
+README.md

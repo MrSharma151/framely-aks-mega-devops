@@ -8,8 +8,8 @@ services:
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "StrongPassword@123"
       MSSQL_PID: "Developer"
+      SA_PASSWORD: "StrongPassword@123" # Local only
     volumes:
       - sql_data:/var/opt/mssql
     ports:
@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
     image: framely-api:latest
-    container_name: framely-backend
+    container_name: framely-api
     restart: unless-stopped
     depends_on:
       - sqlserver
@@ -52,8 +52,8 @@ services:
   frontend-customer:
     build:
       context: ./frontend-customer
-    image: framely-frontend-customer:latest
-    container_name: framely-frontend-customer
+    image: framely-customer:latest
+    container_name: framely-customer
     depends_on:
       - backend
     environment:

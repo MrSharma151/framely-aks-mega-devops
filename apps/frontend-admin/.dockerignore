@@ -22,3 +22,7 @@ README.md
 
 # OS / editor junk
 .DS_Store
+
+# Dockerfiles
+Dockerfile*
+docker-compose.yml
