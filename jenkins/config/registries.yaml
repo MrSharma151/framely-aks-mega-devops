@@ -1,0 +1,26 @@
+# ======================================================================
+# registries.yaml
+# Framely – Mega DevOps AKS Project
+#
+# Purpose:
+# - Define container registry details per environment
+# - Keep registry configuration out of pipelines
+# - Allow environment-specific isolation (stage vs prod)
+#
+# NOTE:
+# - Actual credentials are stored in Jenkins Credentials Manager
+# - Pipelines only reference credential IDs
+# ======================================================================
+
+registries:
+  stage:
+    type: acr
+    registryUrl: framelyacr.azurecr.io
+    repositoryPrefix: framely
+    credentialsId: acr-stage-creds
+
+  prod:
+    type: acr
+    registryUrl: framelyacr.azurecr.io
+    repositoryPrefix: framely
+    credentialsId: acr-prod-creds

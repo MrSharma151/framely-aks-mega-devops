@@ -1,0 +1,44 @@
+# ======================================================================
+# apps.yaml
+# Framely – Mega DevOps AKS Project
+#
+# Purpose:
+# - Declare all applications handled by Jenkins pipelines
+# - Provide application-specific metadata in a declarative way
+# - Allow pipelines to remain generic and loop-based
+#
+# NOTE:
+# - Each application must have a Dockerfile in its path
+# - VERSION file (if present) can be used later for release tagging
+# - Pipelines will iterate over this list automatically
+# ======================================================================
+
+apps:
+  # --------------------------------------------------------------------
+  # Backend API service
+  # Technology: .NET
+  # --------------------------------------------------------------------
+  - name: backend
+    path: apps/backend             # Path where Dockerfile and source code live
+    testCommand: dotnet test       # Command used by Jenkins to run tests
+    securityCommand: dotnet list package --vulnerable
+                                  # Basic dependency vulnerability check
+
+  # --------------------------------------------------------------------
+  # Admin Frontend Application
+  # Technology: Node.js / Next.js
+  # --------------------------------------------------------------------
+  - name: frontend-admin
+    path: apps/frontend-admin      # Application source + Dockerfile location
+    testCommand: npm test           # Run unit / component tests
+    securityCommand: npm audit --audit-level=high
+                                  # Fail build if high/critical vulns found
+
+  # --------------------------------------------------------------------
+  # Customer Frontend Application
+  # Technology: Node.js / Next.js
+  # --------------------------------------------------------------------
+  - name: frontend-customer
+    path: apps/frontend-customer   # Application source + Dockerfile location
+    testCommand: npm test
+    securityCommand: npm audit --audit-level=high
