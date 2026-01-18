@@ -1,0 +1,64 @@
+# ======================================================================
+# Deployment: backend
+# Environment: stage
+#
+# Purpose:
+# - Deploy the Backend API application
+# - Define container image, replicas, ports, and health checks
+#
+# Notes:
+# - Image tag will be updated by Jenkins via GitOps
+# - ArgoCD will sync this deployment automatically
+# ======================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: framely-stage        # Dedicated namespace for stage environment
+  labels:
+    app: backend
+spec:
+  replicas: 2                     # Number of backend pods (stage level)
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: framely/backend:latest
+          # Image tag is managed via kustomization.yaml (GitOps)
+
+          ports:
+            - containerPort: 8080
+              # Backend application listens on port 8080
+
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Stage"
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10

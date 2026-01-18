@@ -1,0 +1,60 @@
+# ======================================================================
+# Deployment: frontend-customer
+# Environment: stage
+#
+# Purpose:
+# - Deploy the Customer Frontend application
+# - Serve the customer-facing UI
+#
+# Notes:
+# - Image tag is managed via kustomization.yaml (GitOps)
+# - ArgoCD automatically syncs this deployment
+# ======================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-customer
+  namespace: framely-stage          # Dedicated namespace for stage environment
+  labels:
+    app: frontend-customer
+spec:
+  replicas: 2                       # Two replicas for availability (stage)
+  selector:
+    matchLabels:
+      app: frontend-customer
+  template:
+    metadata:
+      labels:
+        app: frontend-customer
+    spec:
+      containers:
+        - name: frontend-customer
+          image: framely/frontend-customer:latest
+          # Image tag will be updated by Jenkins via GitOps
+
+          ports:
+            - containerPort: 80
+              # Frontend container listens on port 80
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 20
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
