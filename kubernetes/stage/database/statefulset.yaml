@@ -1,25 +1,26 @@
 # ======================================================================
-# Deployment: sql-server
+# StatefulSet: sql-server
 # Environment: stage
 #
 # Purpose:
-# - Run SQL Server inside Kubernetes for local/stage testing
-# - Provide a real database for backend application
+# - Run SQL Server as a stateful workload in Kubernetes
+# - Provide stable network identity for database access
 #
 # IMPORTANT:
-# - This setup is NOT production-grade
-# - Used only for local development and stage validation
+# - This is still NOT production-grade (no HA, no backups)
+# - Designed for local / stage validation only
 # ======================================================================
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: sql-server
   namespace: framely-stage
   labels:
     app: sql-server
 spec:
-  replicas: 1                     # Single replica (stateful workload)
+  serviceName: sql-server           # Headless or ClusterIP service
+  replicas: 1                       # Single instance (stage)
   selector:
     matchLabels:
       app: sql-server
