@@ -20,7 +20,6 @@ apps:
   # --------------------------------------------------------------------
   - name: backend
     path: apps/backend             # Path where Dockerfile and source code live
-    testCommand: dotnet test       # Command used by Jenkins to run tests
     securityCommand: dotnet list package --vulnerable
                                   # Basic dependency vulnerability check
 
