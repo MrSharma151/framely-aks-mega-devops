@@ -1,20 +1,3 @@
-/*
-========================================================================
- tests.groovy
- Framely – Mega DevOps AKS Project
-
- Purpose:
- - Centralized test execution logic for all applications
- - Support multiple tech stacks (.NET, Node.js)
- - Fail fast on test failure
-
- Design Principles:
- - One responsibility: testing only
- - Config-driven (apps.yaml)
- - Minimal app-specific branching
-========================================================================
-*/
-
 def run(app) {
 
     stage("Tests :: ${app.name}") {
@@ -28,33 +11,28 @@ def run(app) {
 
             try {
 
-                /*
-                 * Backend (.NET) special handling:
-                 * - Multi-project solution
-                 * - Tests are discovered via solution file
-                 */
+                // Backend (.NET)
                 if (app.name == 'backend') {
 
                     echo "Detected .NET backend application"
-                    echo "Running tests via solution file"
-
                     sh '''
                         dotnet test Framely/Framely.sln
                     '''
 
                 }
-                /*
-                 * All other applications (Node.js, etc.)
-                 * - Test command comes from apps.yaml
-                 */
+                // Frontend / Node.js apps
                 else {
 
                     if (!app.testCommand) {
                         error "❌ No testCommand defined for ${app.name} in apps.yaml"
                     }
 
-                    echo "Executing test command: ${app.testCommand}"
+                    echo "Installing Node.js dependencies (CI mode)"
+                    sh '''
+                        npm ci
+                    '''
 
+                    echo "Executing test command: ${app.testCommand}"
                     sh """
                         ${app.testCommand}
                     """
