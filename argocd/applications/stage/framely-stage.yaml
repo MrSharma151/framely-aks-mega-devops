@@ -29,7 +29,7 @@ spec:
   # Source: Git repository containing Kubernetes manifests
   # --------------------------------------------------------------------
   source:
-    repoURL: https://github.com/MrSharma151/framely-aks-mega-devops.git
+    repoURL: git@github.com:MrSharma151/framely-aks-mega-devops.git
     targetRevision: stage            # Track the 'stage' branch only
     path: kubernetes/stage           # GitOps manifests location
 

@@ -1,15 +1,16 @@
 # ======================================================================
 # StatefulSet: sql-server
-# Environment: stage
+# Environment: stage (local KIND)
 #
 # Purpose:
-# - Run SQL Server as a stateful workload in Kubernetes
-# - Provide stable network identity for database access
+# - Run SQL Server as a stateful workload for local testing
+# - Provide a database backend for application validation
 #
 # IMPORTANT:
-# - This is still NOT production-grade (no HA, no backups)
-# - Designed for local / stage validation only
-# - VPC is intenionally not used here for simplicity and for faster kind testing
+# - This setup is strictly for local / stage testing
+# - Credentials are intentionally hardcoded for simplicity
+# - Production will use a managed database service (AKS)
+# - No containerized database will be used in production
 # ======================================================================
 
 apiVersion: apps/v1
@@ -20,8 +21,8 @@ metadata:
   labels:
     app: sql-server
 spec:
-  serviceName: sql-server           # Headless or ClusterIP service
-  replicas: 1                       # Single instance (stage)
+  serviceName: sql-server
+  replicas: 1                      # Single instance for local testing
   selector:
     matchLabels:
       app: sql-server
@@ -35,19 +36,17 @@ spec:
           image: mcr.microsoft.com/mssql/server:2022-latest
 
           ports:
-            - containerPort: 1433
-              # Default SQL Server port
+            - containerPort: 1433   # Default SQL Server port
 
           env:
             - name: ACCEPT_EULA
               value: "Y"
             - name: MSSQL_PID
               value: "Developer"
+
+            # Hardcoded password for local KIND testing only
             - name: SA_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sql-server-secret
-                  key: SA_PASSWORD
+              value: "Str0ngP@ssw0rd123"
 
           resources:
             requests:
