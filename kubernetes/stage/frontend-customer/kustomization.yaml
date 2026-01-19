@@ -21,7 +21,7 @@ kind: Kustomization
 namespace: framely-stage
 
 resources:
-  - deployment.yaml
-  - service.yaml
+- deployment.yaml
+- service.yaml
 
 
