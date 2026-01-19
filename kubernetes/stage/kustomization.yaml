@@ -27,6 +27,7 @@ resources:
 - backend
 - frontend-admin
 - frontend-customer
+- ingress.yaml
 
 # image overrides for stage environment
 
