@@ -37,5 +37,4 @@ images:
 - name: framely/frontend-admin
   newName: "null"
 - name: framely/frontend-customer
-  newName: mrsharma151/framely-frontend-customer
-  newTag: 1.0.6
+  newName: "null"
