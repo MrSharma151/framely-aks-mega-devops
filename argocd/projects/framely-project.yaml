@@ -28,7 +28,7 @@ spec:
   # Source repositories allowed for this project
   # --------------------------------------------------------------------
   sourceRepos:
-    - https://github.com/MrSharma151/framely-aks-mega-devops.git       # Allow this Git repository
+    - git@github.com:MrSharma151/framely-aks-mega-devops.git       # Allow this Git repository
     
   # --------------------------------------------------------------------
   # Destinations where applications are allowed to deploy

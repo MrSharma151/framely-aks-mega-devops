@@ -23,7 +23,7 @@ resources:
 # Application and service components
 # Each sub-directory has its own kustomization.yaml
 # ----------------------------------------------------------------------
-  - backend
   - database
+  - backend
   - frontend-admin
   - frontend-customer
