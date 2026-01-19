@@ -30,14 +30,14 @@ resources:
 
 # image overrides for stage environment
 images:
-  - name: framely/backend
-    newName: mrsharma151/framely-backend
-    newTag: 1.0.7
+- name: framely/backend
+  newName: mrsharma151/framely-backend
+  newTag: <jenkins-managed>
 
-  - name: framely/frontend-admin
-    newName: mrsharma151/framely-frontend-admin
-    newTag: 1.0.5
+- name: framely/frontend-admin
+  newName: mrsharma151/framely-frontend-admin
+  newTag: <jenkins-managed>
 
-  - name: framely/frontend-customer
-    newName: mrsharma151/framely-frontend-customer
-    newTag: 1.0.6
+- name: framely/frontend-customer
+  newName: mrsharma151/framely-frontend-customer
+  newTag: <jenkins-managed>
