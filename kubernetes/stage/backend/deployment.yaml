@@ -16,6 +16,26 @@ spec:
       labels:
         app: backend
     spec:
+      # ------------------------------------------------------------
+      # INIT CONTAINER: Wait for SQL Server
+      # ------------------------------------------------------------
+      initContainers:
+        - name: wait-for-sql
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for SQL Server to be ready..."
+              until nc -z sql-server 1433; do
+                echo "SQL Server not reachable yet. Retrying in 5s..."
+                sleep 5
+              done
+              echo "SQL Server is reachable. Starting backend..."
+
+      # ------------------------------------------------------------
+      # BACKEND CONTAINER
+      # ------------------------------------------------------------
       containers:
         - name: backend
           image: framely/backend:latest
