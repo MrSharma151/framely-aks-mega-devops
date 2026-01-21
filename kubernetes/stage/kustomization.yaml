@@ -5,40 +5,37 @@
 # - Aggregate all stage-level Kubernetes resources
 # - Act as the single entry point for ArgoCD
 #
-# ArgoCD points to this directory:
+# ArgoCD points to:
 # - kubernetes/stage
-# - This file controls what gets deployed
+# - This file fully defines the stage environment
 # ======================================================================
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # ----------------------------------------------------------------------
-# Namespace definition
-# ----------------------------------------------------------------------
-
-# ----------------------------------------------------------------------
-# Application and service components
-# Each sub-directory has its own kustomization.yaml
+# Resources
 # ----------------------------------------------------------------------
 resources:
-- namespace.yaml
-- database
-- backend
-- frontend-admin
-- frontend-customer
-- ingress.yaml
+  - namespace.yaml
+  - backend
+  - frontend-admin
+  - frontend-customer
+  - ingress.yaml
 
-# image overrides for stage environment
+# ----------------------------------------------------------------------
+# Image overrides (Stage)
+# Jenkins updates ONLY the tag via GitOps
+# ----------------------------------------------------------------------
 images:
-- name: framely/backend
-  newName: mrsharma151/framely-backend
-  newTag: <jenkins-managed>
+  - name: framely/backend
+    newName: mrsharma151/framely-backend
+    newTag: <jenkins-managed>
 
-- name: framely/frontend-admin
-  newName: mrsharma151/framely-frontend-admin
-  newTag: <jenkins-managed>
+  - name: framely/frontend-admin
+    newName: mrsharma151/framely-frontend-admin
+    newTag: <jenkins-managed>
 
-- name: framely/frontend-customer
-  newName: mrsharma151/framely-frontend-customer
-  newTag: <jenkins-managed>
+  - name: framely/frontend-customer
+    newName: mrsharma151/framely-frontend-customer
+    newTag: <jenkins-managed>
