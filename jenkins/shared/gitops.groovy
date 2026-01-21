@@ -7,11 +7,6 @@
  - Update Kubernetes manifests via GitOps
  - Modify image tags in Kustomize configuration
  - Trigger ArgoCD reconciliation (indirectly)
-
- KEY PRINCIPLES:
- - Jenkins NEVER deploys to Kubernetes
- - Jenkins ONLY updates Git (single source of truth)
- - ArgoCD performs actual deployment
 ========================================================================
 */
 
@@ -43,13 +38,13 @@ before attempting GitOps update.
         // --------------------------------------------------
         def gitopsPath = "kubernetes/${environment}"
 
-        // IMPORTANT:
-        // This MUST match the image name defined in kustomization.yaml
-        // We derive it from the logical image name to avoid drift.
-        def kustomizeImageName = app.builtImage.name
-
-        // Full docker image reference
-        def dockerImage = "${app.builtImage.name}:${app.builtImage.tag}"
+        // --------------------------------------------------
+        // Kustomize image handling (CRITICAL)
+        // LEFT  = image name WITHOUT tag (must match Deployment.yaml)
+        // RIGHT = full image WITH tag
+        // --------------------------------------------------
+        def imageWithTag = "${app.builtImage.name}:${app.builtImage.tag}"
+        def imageWithoutTag = app.builtImage.name.split(":")[0]
 
         // --------------------------------------------------
         // Ensure correct Git branch
@@ -62,16 +57,16 @@ before attempting GitOps update.
         """
 
         // --------------------------------------------------
-        // Update Kustomize image mapping
+        // Update Kustomize image mapping (OVERWRITE, NOT APPEND)
         // --------------------------------------------------
         dir(gitopsPath) {
             sh """
                 echo "Updating image in kustomization.yaml"
-                echo "Kustomize Image Name : ${kustomizeImageName}"
-                echo "Docker Image         : ${dockerImage}"
+                echo "Kustomize Image Name : ${imageWithoutTag}"
+                echo "Docker Image         : ${imageWithTag}"
 
                 kustomize edit set image \
-                  ${kustomizeImageName}=${dockerImage}
+                  ${imageWithoutTag}=${imageWithTag}
             """
         }
 

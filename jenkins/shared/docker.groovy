@@ -77,7 +77,8 @@ Ensure Jenkins pipeline exports:
             echo "Injecting frontend build-time arguments"
 
             app.buildArgs.each { key, value ->
-                if (value.startsWith("__")) {
+                // Allow placeholders for verification builds (main branch)
+                if (pushImage && value.startsWith("__")) {
                     error "❌ Unresolved build argument placeholder: ${key}=${value}"
                 }
                 buildArgs += "--build-arg ${key}=${value} "
