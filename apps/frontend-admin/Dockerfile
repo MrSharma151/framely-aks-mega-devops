@@ -1,24 +1,25 @@
 # ----------------------------------------------------
 # 1. Builder Stage
 # ----------------------------------------------------
-# Use pinned Node.js Alpine image for reproducibility
+# Use pinned Node.js Alpine image for reproducible builds
 FROM node:20.11.1-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# -----------------------------
+# ----------------------------------------------------
 # Build-time arguments
-# Injected by Jenkins / local docker build
-# -----------------------------
+# These values are injected by Jenkins or docker build
+# and are baked into the Next.js build output.
+# ----------------------------------------------------
 ARG NEXT_PUBLIC_BASE_PATH=""
 ARG NEXT_PUBLIC_API_BASE_URL=""
 
-# Make build-time args available to Next.js
+# Expose build-time variables to Next.js
 ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
-# Copy dependency manifests first for better caching
+# Copy dependency manifests first to leverage Docker layer caching
 COPY package.json package-lock.json ./
 
 # Install dependencies deterministically
@@ -27,7 +28,7 @@ RUN npm ci --no-audit --no-fund
 # Copy application source code
 COPY . .
 
-# Build Next.js application (standalone output)
+# Build Next.js application using standalone output
 RUN npm run build
 
 
@@ -36,8 +37,12 @@ RUN npm run build
 # ----------------------------------------------------
 FROM node:20.11.1-alpine AS runner
 
-# Set production environment
+# Set runtime environment
 ENV NODE_ENV=production
+
+# Ensure the application binds to all interfaces
+# Required for Kubernetes Services and Ingress
+ENV HOSTNAME=0.0.0.0
 
 # Create non-root user for security hardening
 RUN addgroup -S nextjs -g 1001 \
@@ -46,12 +51,12 @@ RUN addgroup -S nextjs -g 1001 \
 # Set working directory
 WORKDIR /app
 
-# Copy ONLY required runtime files from builder
-# --chown avoids extra chown layer (image size optimization)
+# Copy ONLY required runtime artifacts from builder
+# --chown avoids an extra layer and reduces image size
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
 
-# there is no public folder in this setup, so we skip copying it
+# No public folder is required in this setup
 # COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 
 # Switch to non-root user
@@ -61,5 +66,5 @@ USER nextjs
 EXPOSE 3000
 
 # Start Next.js standalone server
-# Exec form ensures proper signal handling
+# Exec form ensures proper signal handling in Kubernetes
 CMD ["node", "server.js"]
