@@ -1,6 +1,6 @@
 services:
   # =========================
-  # SQL Server Database
+  # SQL Server Database (Local Only)
   # =========================
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -9,7 +9,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
-      SA_PASSWORD: "StrongPassword@123" # Local only
+      SA_PASSWORD: "StrongPassword@123" # ⚠️ Local development only
     volumes:
       - sql_data:/var/opt/mssql
     ports:
@@ -32,6 +32,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
 
+      # Database
       ConnectionStrings__DefaultConnection: >
         Server=sqlserver,1433;
         Database=FramelyDb;
@@ -39,8 +40,25 @@ services:
         Password=StrongPassword@123;
         TrustServerCertificate=True;
 
+      # JWT Configuration
+      JwtSettings__Secret: Framely_Local_JWT_Secret_AtLeast_32_Chars
+      JwtSettings__Issuer: FramelyAPI
+      JwtSettings__Audience: FramelyUsers
+      JwtSettings__ExpiresInMinutes: 60
+
+      # CORS
       FrontendOrigins__0: http://localhost:3000
       FrontendOrigins__1: http://localhost:3001
+
+      # Feature Flags
+      SeedAdmin: "true"
+
+      # Storage (Optional for local dev)
+      Storage__ConnectionString: ""
+      Storage__Container: ""
+      Storage__Name: ""
+      Storage__Key: ""
+
     ports:
       - "8081:8080"
     networks:
@@ -52,12 +70,12 @@ services:
   frontend-customer:
     build:
       context: ./frontend-customer
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8081/api/v1
     image: framely-customer:latest
     container_name: framely-customer
     depends_on:
       - backend
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8081/api/v1
     ports:
       - "3000:3000"
     networks:
@@ -69,20 +87,26 @@ services:
   frontend-admin:
     build:
       context: ./frontend-admin
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8081/api/v1
     image: framely-admin:latest
     container_name: framely-admin
     depends_on:
       - backend
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8081/api/v1
     ports:
       - "3001:3000"
     networks:
       - framely-network
 
+# =========================
+# Volumes
+# =========================
 volumes:
   sql_data:
 
+# =========================
+# Networks
+# =========================
 networks:
   framely-network:
     driver: bridge

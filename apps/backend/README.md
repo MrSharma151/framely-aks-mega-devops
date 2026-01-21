@@ -4,21 +4,21 @@
 
 # 🧠 Framely Backend API
 
-**Framely Backend** is the **core API service** for the Framely eyewear platform.
-It handles **authentication, authorization, products, categories, orders, users, and file uploads**, and acts as the single source of truth for both **Customer** and **Admin** frontends.
+**Framely Backend API** is the **core service** of the Framely eyewear platform.
+It acts as the **single source of truth** for authentication, authorization, products, categories, orders, users, and file uploads, serving both the **Customer** and **Admin** frontends.
 
-This backend is built with **ASP.NET Core + Entity Framework Core**, fully **Dockerized**, and designed to run seamlessly in **Docker Compose, Azure, and AKS**.
+The backend is built using **ASP.NET Core + Entity Framework Core**, fully **containerized**, and designed for **cloud-native deployments using Docker, AKS, and GitOps workflows**.
 
 ---
 
 ## 📌 Project Status
 
-* ✅ **Core APIs Implemented**
-* ✅ **JWT Authentication & Role-based Authorization**
-* ✅ **Entity Framework Core with SQL Server**
-* ✅ **Dockerized (Multi-stage build)**
-* ✅ **Automatic DB migrations & role seeding**
-* 🚀 **Production-ready for AKS / Azure**
+* ✅ Core APIs implemented
+* ✅ JWT authentication & role-based authorization
+* ✅ Entity Framework Core with SQL Server
+* ✅ Multi-stage Docker build
+* ✅ Automatic database migrations & role seeding
+* 🚀 **Production-ready for AKS deployments**
 
 ---
 
@@ -28,11 +28,10 @@ This backend is built with **ASP.NET Core + Entity Framework Core**, fully **Doc
 * **Entity Framework Core**
 * **SQL Server**
 * **ASP.NET Identity**
-* **JWT Authentication**
+* **JWT Authentication (HS256)**
 * **AutoMapper**
 * **Swagger / OpenAPI**
-* **Docker**
-* **Jest-compatible frontend consumers**
+* **Docker (multi-stage builds)**
 
 ---
 
@@ -40,13 +39,13 @@ This backend is built with **ASP.NET Core + Entity Framework Core**, fully **Doc
 
 ```bash
 apps/backend/
-├── Dockerfile                # Multi-stage production Dockerfile
+├── Dockerfile                # Production-grade multi-stage Dockerfile
 ├── README.md                 # Backend documentation
 ├── VERSION                   # Backend versioning
 ├── Framely.API               # API layer (Controllers, Program.cs)
 ├── Framely.Core              # Domain models & interfaces
 ├── Framely.Infrastructure    # EF Core, Identity, services
-└── Framely.Tests              # Unit & integration tests
+└── Framely.Tests             # Unit & integration tests
 ```
 
 ### 📁 Layered Architecture
@@ -62,20 +61,17 @@ apps/backend/
 
 ## 🔐 Authentication & Authorization
 
-* **JWT-based authentication**
-* **Role-based access control**
-
-  * `USER`
-  * `ADMIN`
-* Uses **ASP.NET Identity**
-* Tokens generated using **HS256**
+* JWT-based authentication
+* Role-based access control using **ASP.NET Identity**
 
 ### Roles
 
-* `USER` → Customer frontend
-* `ADMIN` → Admin dashboard
+| Role    | Usage             |
+| ------- | ----------------- |
+| `USER`  | Customer frontend |
+| `ADMIN` | Admin dashboard   |
 
-Roles are **auto-created at startup** if missing.
+Roles are **automatically created at application startup** if missing.
 
 ---
 
@@ -83,37 +79,20 @@ Roles are **auto-created at startup** if missing.
 
 * **SQL Server**
 * Managed via **Entity Framework Core**
-* Automatic:
 
-  * Database creation
-  * Migrations
-  * Role seeding
+### Automatic on Startup
 
-### Tables Include
+* Database creation
+* EF Core migrations
+* Role seeding (`USER`, `ADMIN`)
 
-* `AspNetUsers`
-* `AspNetRoles`
-* `Products`
-* `Categories`
-* `Orders`
-* `OrderItems`
-
----
-
-## 🧪 Database Initialization (Important)
-
-On application startup, the backend automatically:
-
-1. Applies EF Core migrations
-2. Ensures required roles exist (`USER`, `ADMIN`)
-
-This makes the backend **safe for Docker, Azure, and AKS** environments.
+This makes the service **safe for restarts and redeployments** in Docker, Azure, and AKS.
 
 ---
 
 ## 🌐 API Endpoints (High Level)
 
-### 🔑 Auth
+### 🔑 Authentication
 
 * `POST /api/v1/Auth/register`
 * `POST /api/v1/Auth/login`
@@ -141,16 +120,11 @@ This makes the backend **safe for Docker, Azure, and AKS** environments.
 * `PUT /api/v1/Orders/{id}/status`
 * `DELETE /api/v1/Orders/{id}`
 
-### 🖼️ Blob Storage (Optional)
-
-* `POST /api/v1/Blob/upload`
-* `DELETE /api/v1/Blob/{fileName}`
-
 ---
 
 ## 🧪 Testing
 
-Backend test projects live in:
+Tests are located under:
 
 ```bash
 apps/backend/Framely.Tests/
@@ -159,14 +133,14 @@ apps/backend/Framely.Tests/
 Includes:
 
 * Service-level tests
-* Controller logic validation
-* Identity & auth scenarios
+* Controller validation
+* Authentication & authorization scenarios
 
 ---
 
 ## 🐳 Docker Support
 
-The backend uses a **multi-stage Dockerfile** for optimized images.
+The backend uses a **multi-stage Dockerfile** optimized for production.
 
 ### Build Image
 
@@ -180,52 +154,142 @@ docker build -t framely-api .
 docker run -p 8080:8080 framely-api
 ```
 
-### Docker Compose
+### Health Checks
 
-This backend is designed to run with:
-
-* SQL Server container
-* Frontend customer
-* Frontend admin
-
-via the **root `docker-compose.yml`**.
+Docker `HEALTHCHECK` is intentionally disabled.
+**Kubernetes liveness and readiness probes** are used instead when deployed to AKS.
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Configuration & Runtime Environment Variables (UPDATED ✅)
 
-All configuration is **environment-driven**.
+All application configuration is **externalized** and provided at **runtime via environment variables**.
+This design ensures the backend is fully compatible with **Docker Compose**, **Kubernetes ConfigMaps**, and **Kubernetes Secrets**.
 
-### Required Environment Variables
+> ⚠️ **No secrets are hardcoded** in source code or Docker images.
+
+---
+
+### 🔹 Core Runtime Variables
 
 ```env
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=http://+:8080
+```
 
-ConnectionStrings__DefaultConnection=Server=...;Database=...;
+| Variable                 | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| `ASPNETCORE_ENVIRONMENT` | Application environment (Production / Staging / Development) |
+| `ASPNETCORE_URLS`        | HTTP binding used by the container                           |
 
-JwtSettings__Secret=very_long_secret_key_32_chars_min
+---
+
+### 🔹 Database Configuration (SQL Server)
+
+```env
+ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FramelyDb;User Id=sa;Password=StrongPassword@123;TrustServerCertificate=True;
+```
+
+| Variable                               | Description                                                     |
+| -------------------------------------- | --------------------------------------------------------------- |
+| `ConnectionStrings__DefaultConnection` | SQL Server connection string (Docker / Azure SQL / Managed SQL) |
+
+✔ Used by Entity Framework Core
+✔ Migrations & schema creation run automatically on startup
+
+---
+
+### 🔹 JWT Authentication Settings
+
+```env
+JwtSettings__Secret=very_long_secret_key_min_32_chars
 JwtSettings__Issuer=FramelyAPI
 JwtSettings__Audience=FramelyUsers
+JwtSettings__ExpiresInMinutes=60
+```
 
+| Variable                        | Description                        |
+| ------------------------------- | ---------------------------------- |
+| `JwtSettings__Secret`           | Secret key used to sign JWT tokens |
+| `JwtSettings__Issuer`           | Token issuer                       |
+| `JwtSettings__Audience`         | Token audience                     |
+| `JwtSettings__ExpiresInMinutes` | Token expiry duration              |
+
+🔐 **JWT secret must always be injected via Kubernetes Secret or secure CI/CD variables**
+
+---
+
+### 🔹 Frontend CORS Configuration
+
+```env
 FrontendOrigins__0=http://localhost:3000
 FrontendOrigins__1=http://localhost:3001
 ```
 
-✔ No hardcoded secrets
-✔ Docker & AKS compatible
+| Variable             | Description                       |
+| -------------------- | --------------------------------- |
+| `FrontendOrigins__*` | Allowed frontend origins for CORS |
+
+✔ Supports multiple frontends (Admin & Customer)
+✔ Easily extendable per environment
 
 ---
 
-## 📘 Swagger / API Docs
+### 🔹 Storage Configuration (Blob / File Storage)
 
-Swagger UI is enabled when configured:
+Used for **product image uploads** and other file assets.
+
+```env
+Storage__ConnectionString=DefaultEndpointsProtocol=...
+Storage__Container=products
+Storage__Name=framelyblob
+Storage__Key=storage_access_key
+```
+
+| Variable                    | Description                       |
+| --------------------------- | --------------------------------- |
+| `Storage__ConnectionString` | Storage account connection string |
+| `Storage__Container`        | Container name used for uploads   |
+| `Storage__Name`             | Storage account name              |
+| `Storage__Key`              | Storage access key                |
+
+📌 In AKS:
+
+* Non-sensitive values → **ConfigMap**
+* Sensitive values → **Kubernetes Secret**
+
+---
+
+### 🔹 Feature Flags
+
+```env
+SeedAdmin=true
+```
+
+| Variable    | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| `SeedAdmin` | Enables automatic admin user & role seeding on startup |
+
+---
+
+### ✅ Configuration Principles (Important)
+
+✔ No environment-specific values in code
+✔ Same container image runs across **local, stage, and prod**
+✔ Configuration injected at runtime
+✔ Fully compatible with **GitOps & ArgoCD**
+
+---
+
+## 📘 Swagger / API Documentation
+
+Swagger UI is available at:
 
 ```
 GET /swagger
 ```
 
-Useful for:
+Used for:
 
 * API testing
 * Contract validation
@@ -235,47 +299,49 @@ Useful for:
 
 ## 🚀 Deployment Strategy
 
-### Local
+### Local Development
 
 * Docker
 * Docker Compose
 
 ### CI/CD
 
-* GitHub Actions
-* Automated image builds
-* Versioned releases
+* **Jenkins-based pipelines**
+* Automated Docker image builds
+* GitOps-driven image tag updates
 
-### Production
+### Kubernetes / AKS
 
-* Azure App Service (existing)
-* AKS (target architecture)
+* Deployed via **ArgoCD**
+* Environment-specific manifests using **Kustomize**
+* Stage environment fully provisioned
+* Production designed with manual approval gates
 
 ---
 
 ## 🛡️ Security Practices
 
-* JWT secrets via environment variables
+* Secrets injected via environment variables
 * Role-based authorization
-* No secrets in source control
-* HTTPS enforced at ingress (AKS)
+* Non-root container execution
+* HTTPS enforced at Kubernetes ingress
 
 ---
 
 ## 📝 Notes
 
-* This backend is the **central brain** of Framely
-* Built for **cloud-native & GitOps workflows**
-* Safe to restart, rebuild, and redeploy
+* Backend is **stateless and cloud-native**
+* Safe to restart and redeploy
+* Designed for **GitOps-first workflows**
 * Fully compatible with **AKS + ArgoCD**
 
 ---
 
-## 🎯 Next Enhancements
+## 🎯 Future Enhancements
 
 * Refresh tokens
 * Rate limiting
-* Caching (Redis)
+* Redis caching
 * Observability (Prometheus + Grafana)
 * Background jobs (Hangfire / Azure Jobs)
 

@@ -2,10 +2,19 @@
 
 ---
 
-# 🧩 Framely Applications – Local → Docker → AKS Ready
+# 🧩 Framely Applications – Source of Truth
 
-This directory contains **all deployable application components** of the Framely platform.
-It is designed to work **locally via Docker Compose** and later transition **smoothly into Kubernetes (AKS) using GitOps (ArgoCD)** without architectural changes.
+This directory contains **all application services** of the Framely platform.
+It serves as the **single source of truth** for:
+
+* Application responsibilities
+* Docker images & Dockerfiles
+* Runtime environment variables
+* Service boundaries
+* Kubernetes (AKS) readiness assumptions
+
+This directory is **finalized and stable**.
+No structural or architectural changes are expected here.
 
 ---
 
@@ -13,258 +22,223 @@ It is designed to work **locally via Docker Compose** and later transition **smo
 
 ```bash
 apps/
-├── README.md                # This document
-├── docker-compose.yml       # Local orchestration (dev only)
-├── backend                  # ASP.NET Core API
-├── frontend-admin           # Admin dashboard (Next.js)
-└── frontend-customer        # Customer storefront (Next.js)
+├── README.md                # This document (source of truth)
+├── docker-compose.yml       # Local orchestration (development & validation only)
+├── backend                  # ASP.NET Core Backend API
+├── frontend-admin           # Admin Dashboard (Next.js)
+└── frontend-customer        # Customer Storefront (Next.js)
 ```
-
-Each application is:
-
-* ✅ **Independently buildable**
-* ✅ **Dockerized**
-* ✅ **Environment-driven**
-* ✅ **AKS-ready**
 
 ---
 
-## 🧱 Application Responsibilities
+## 🧱 Services & Responsibilities
 
-### 🧠 Backend (`apps/backend`)
+### 🧠 Backend API (`apps/backend`)
 
-* Central API service
+**Type:** ASP.NET Core API
+**Role:** Central business & data service (single source of truth)
+
+**Responsibilities**
+
 * Authentication & authorization (JWT + Roles)
-* Products, categories, orders
-* SQL Server + EF Core
-* Blob storage integration (Azure)
+* User, product, category & order management
+* Database access via Entity Framework Core
+* Blob / file storage integration
+* CORS enforcement for frontend apps
 
-📘 Detailed docs: `apps/backend/README.md`
+**Key Characteristics**
+
+* Stateless
+* Database-driven
+* Safe for restarts
+* Idempotent startup (migrations + role seeding)
+
+**Docker**
+
+* Multi-stage Dockerfile
+* Non-root runtime user
+* Production-ready image
+
+📘 Detailed reference: `apps/backend/README.md`
 
 ---
 
 ### 🛍️ Frontend – Customer (`apps/frontend-customer`)
 
-* Public storefront
-* User login, orders, cart
-* Consumes backend APIs only
-* Stateless, CDN-friendly
+**Type:** Next.js (App Router)
+**Role:** Public customer-facing storefront
 
-📘 Detailed docs: `apps/frontend-customer/README.md`
+**Responsibilities**
+
+* Product browsing & search
+* User authentication
+* Cart & checkout flow
+* Order history & tracking
+
+**Key Characteristics**
+
+* Fully stateless
+* Consumes backend APIs only
+* No direct database access
+* CDN / Ingress friendly
+
+**Docker**
+
+* Next.js standalone build
+* Build-time environment injection
+* Minimal runtime image
+* Non-root container execution
+
+📘 Detailed reference: `apps/frontend-customer/README.md`
 
 ---
 
 ### 🧑‍💼 Frontend – Admin (`apps/frontend-admin`)
 
-* Admin-only dashboard
-* Product, category & order management
-* Role-protected access (`ADMIN`)
+**Type:** Next.js (App Router)
+**Role:** Internal admin dashboard
+
+**Responsibilities**
+
+* Product & category management
+* Order management
+* Admin-only operations
+* Role-protected UI
+
+**Key Characteristics**
+
+* Fully stateless
+* Admin-only access
 * Consumes backend APIs only
 
-📘 Detailed docs: `apps/frontend-admin/README.md`
+**Docker**
+
+* Next.js standalone build
+* Build-time environment injection
+* Minimal runtime image
+* Non-root container execution
+
+📘 Detailed reference: `apps/frontend-admin/README.md`
 
 ---
 
-## 🐳 Local Development (Docker Compose)
+## 🐳 Docker & Image Contracts
 
-For **local development & testing only**, all services are orchestrated using:
+Each application:
 
-```bash
-apps/docker-compose.yml
-```
+* Has **exactly one Dockerfile**
+* Builds a **single immutable image**
+* Receives configuration **only via environment variables**
 
-### What Docker Compose Does
+Dockerfiles are:
 
-* Spins up:
+* Production-grade
+* AKS-ready
+* **Frozen** (no future changes expected)
 
-  * SQL Server
-  * Backend API
-  * Frontend Customer
-  * Frontend Admin
-* Provides **service-to-service networking**
-* Mimics production topology (API + DB separation)
+---
 
-### Run Locally
+## ⚙️ Environment Variable Contracts (CRITICAL)
 
-```bash
-docker compose up -d --build
-```
+This section defines the **stable configuration contract** for all apps.
+
+---
+
+### 🔐 Backend Environment Variables
+
+| Variable                               | Required | Description                |
+| -------------------------------------- | -------- | -------------------------- |
+| `ASPNETCORE_ENVIRONMENT`               | ✅        | Runtime environment        |
+| `ASPNETCORE_URLS`                      | ✅        | HTTP bind address          |
+| `ConnectionStrings__DefaultConnection` | ✅        | Database connection string |
+| `JwtSettings__Secret`                  | ✅        | JWT signing key            |
+| `JwtSettings__Issuer`                  | ✅        | JWT issuer                 |
+| `JwtSettings__Audience`                | ✅        | JWT audience               |
+| `JwtSettings__ExpiresInMinutes`        | ❌        | Token expiry               |
+| `FrontendOrigins__*`                   | ✅        | Allowed CORS origins       |
+| `SeedAdmin`                            | ❌        | Admin seeding flag         |
+| `Storage__ConnectionString`            | ✅        | Blob storage connection    |
+| `Storage__Container`                   | ✅        | Storage container name     |
+| `Storage__Name`                        | ✅        | Storage account name       |
+| `Storage__Key`                         | ✅        | Storage access key         |
+
+📌 **Rules**
+
+* Secrets → Kubernetes Secrets
+* Non-sensitive → ConfigMaps
+* No defaults assumed in production
+
+---
+
+### 🌐 Frontend Environment Variables (Customer & Admin)
+
+| Variable                   | Required | Description                   |
+| -------------------------- | -------- | ----------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | ✅        | Backend API base URL          |
+| `NEXT_PUBLIC_BASE_PATH`    | ❌        | Local path-based routing only |
 
 ⚠️ **Important**
 
-> Docker Compose is **NOT used in production or AKS**.
-> It exists purely for **local validation & integration testing**.
+* `NEXT_PUBLIC_*` variables are **build-time**
+* Any change requires a **new image build**
+* This behavior is intentional and expected
 
 ---
 
-## 🗄️ Database & Migrations (CRITICAL FOR AKS)
+## 🧪 docker-compose.yml (Local Validation Only)
 
-### Current State (Local + Docker)
+`apps/docker-compose.yml` exists to:
 
-* SQL Server runs as a container
-* EF Core migrations are:
+* Validate service integration
+* Test environment variable contracts
+* Run the complete system locally
 
-  * Automatically applied at backend startup
-  * Database created if missing
-* Roles (`USER`, `ADMIN`) are auto-created
+It is **NOT** used in production or Kubernetes.
 
-### Why This Matters for AKS
+What it provides:
 
-In AKS:
-
-* Pods are **ephemeral**
-* Containers restart frequently
-* Manual DB steps are **not acceptable**
-
-✔ The backend is already designed to:
-
-* Auto-run migrations
-* Auto-ensure roles
-* Fail fast if DB is unreachable
-
-➡️ **This design is REQUIRED for Kubernetes stability**
+* SQL Server container (local only)
+* Backend API
+* Customer frontend
+* Admin frontend
 
 ---
 
-## 🔐 Configuration Strategy (AKS-Ready)
+## 🧠 Design Rules (Non-Negotiable)
 
-All apps rely on **environment variables**, not files.
+1️⃣ **Applications are stateless**
+2️⃣ **No configuration inside images**
+3️⃣ **Database & storage are external**
+4️⃣ **Environment variables are the contract**
+5️⃣ **Same image runs in all environments**
 
-### Backend
-
-* Connection string
-* JWT secrets
-* CORS origins
-
-### Frontends
-
-* API base URL only
-
-This enables:
-
-* Kubernetes `ConfigMap`
-* Kubernetes `Secret`
-* ArgoCD-driven config changes
-* Zero image rebuilds for config changes
+These rules are already enforced by the codebase.
 
 ---
 
-## 🚀 AKS Migration – Planned Flow (IMPORTANT)
-
-This `apps` structure is intentionally aligned with AKS delivery.
-
-### Phase 1 – Local (DONE ✅)
-
-* Dockerfiles
-* Docker Compose
-* Local SQL Server
-* Local validation
-
-### Phase 2 – Container Registry (NEXT)
-
-* Build images via Jenkins
-* Push to Azure Container Registry (ACR)
-* Tag images (`app:version`)
-
-### Phase 3 – Kubernetes Manifests
-
-* Separate repo/dir for:
-
-  * Deployments
-  * Services
-  * Ingress
-  * ConfigMaps
-  * Secrets
-* One Deployment per app:
-
-  * backend
-  * frontend-customer
-  * frontend-admin
-
-### Phase 4 – ArgoCD (GitOps)
-
-* ArgoCD watches manifests
-* Jenkins updates image tags only
-* No kubectl in CI
-* Git = single source of truth
-
----
-
-## 🔁 What Will CHANGE in AKS (and What Will NOT)
-
-### ❌ Will NOT Be Used
-
-* docker-compose.yml
-* Local SQL container
-
-### ✅ Will Be Used
-
-* Dockerfiles (unchanged)
-* Environment variables
-* Backend auto-migration logic
-* Stateless frontend images
-
-### 🔄 Will Be Replaced
-
-| Local          | AKS                  |
-| -------------- | -------------------- |
-| SQL container  | Azure SQL Database   |
-| Docker network | Kubernetes Service   |
-| Ports          | Ingress              |
-| .env           | Secrets / ConfigMaps |
-
----
-
-## ⚠️ Critical AKS Notes (Read This Carefully)
-
-### 1️⃣ Never rely on container state
-
-* Containers can restart anytime
-* DB & storage must be external (Azure SQL, Blob)
-
-### 2️⃣ Backend must be idempotent
-
-* Migrations should be safe to re-run
-* Role seeding must not fail if roles exist
-  ✔ Already implemented
-
-### 3️⃣ Frontends must be stateless
-
-* No session storage on container
-* JWT stored client-side
-  ✔ Already implemented
-
-### 4️⃣ docker-compose.yml is **NOT** production
-
-* Exists only for local dev
-* AKS uses YAML manifests + ArgoCD
-
----
-
-## 🧪 Testing Strategy (Future)
+## 🧪 Testing Expectations
 
 * Backend:
 
-  * Unit tests (`Framely.Tests`)
-* Frontend:
+  * Unit & integration tests
+* Frontends:
 
-  * Jest tests (`tests/`, `test/`)
+  * Jest unit & component tests
 * CI:
 
   * Tests run before image build
 * CD:
 
-  * Only deploy tested images
+  * Only tested images are deployed
 
 ---
 
-## 🏁 Summary
+## 🏁 Final Notes
 
-* This `apps` directory is **AKS-ready by design**
-* No re-architecture needed later
-* Clean separation of concerns
-* GitOps-friendly structure
-* Production-grade DevOps foundation
+* This `apps/` directory is **finalized**
+* It represents a **production-grade application layer**
+* No re-architecture or refactor is expected
+* Safe to use as **long-term documentation**
 
 ---
 

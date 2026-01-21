@@ -1,29 +1,23 @@
 
+
 ---
 
 # 👓 Framely Customer Frontend
 
-**Framely Customer Frontend** is the **customer-facing web application** for the Framely eyewear platform.
-This application allows end users to **browse products, search, filter, place orders, and manage their account**.
+**Framely Customer Frontend** is the **customer-facing web application** of the Framely eyewear platform.
+It allows end users to **browse products, search and filter items, place orders, and manage their account**.
 
-It is designed to be:
-
-* **Containerized**
-* **Tested**
-* **CI/CD friendly**
-* **AKS & Azure ready**
-
-This frontend is part of the **Framely Mega DevOps Project**, where the entire system (frontend, backend, database) runs using **Docker, Docker Compose, CI/CD pipelines, and Kubernetes (AKS)**.
+This application is designed to be **cloud-native, containerized, and CI/CD friendly**, and is a core part of the **Framely Mega DevOps Project**, where the complete system (frontend, backend, database) is deployed using **Docker, GitOps, and Kubernetes (AKS)**.
 
 ---
 
 ## 📌 Project Status
 
-* ✅ **Core Customer Features Implemented**
-* ✅ **Dockerized**
-* ✅ **Unit & Component Tests Added**
-* ✅ **Integrated with Framely Backend API**
-* 🚀 **Production-ready for AKS / Azure Static Web Apps**
+* ✅ Core customer features implemented
+* ✅ Fully Dockerized (Next.js standalone build)
+* ✅ Unit & component tests added
+* ✅ Integrated with Framely Backend API
+* 🚀 **Production-ready for AKS deployments**
 
 ---
 
@@ -33,36 +27,36 @@ This frontend is part of the **Framely Mega DevOps Project**, where the entire s
 * **TypeScript**
 * **Tailwind CSS**
 * **Axios** – centralized API client
-* **JWT Authentication** (stored in browser storage)
+* **JWT Authentication** (client-side)
 * **Jest** – unit & component testing
 * **Docker** – containerized build & runtime
 
 ---
 
-## 📂 Directory Structure (Current)
+## 📂 Directory Structure
 
 ```bash
 apps/frontend-customer/
-├── Dockerfile            # Production-ready Dockerfile
+├── Dockerfile            # Production-ready Dockerfile (standalone build)
 ├── README.md             # Project documentation
-├── VERSION               # App versioning
+├── VERSION               # Application versioning
 ├── package.json
 ├── package-lock.json
 ├── jest.config.js        # Jest configuration
 ├── babel.config.js
-├── next.config.js
+├── next.config.js        # Routing & build configuration
 ├── postcss.config.mjs
 ├── tsconfig.json
 ├── public/               # Static assets
 ├── src/                  # Application source code
-└── tests/                # ✅ Test cases (Jest)
+└── tests/                # Unit & component tests
 ```
 
-✅ **Important Notes**
+### Important Notes
 
-* All **test cases live inside `/tests`**
-* **Dockerfile is present at the root of this directory**
-* This app is fully runnable via **Docker / Docker Compose**
+* All test cases are located under `/tests`
+* Dockerfile is maintained at the root of this directory
+* The application is fully runnable using **Docker / Docker Compose**
 
 ---
 
@@ -72,8 +66,8 @@ apps/frontend-customer/
 
 * User registration & login
 * JWT-based authentication
-* Protected routes (redirects unauthenticated users)
-* Centralized auth handling via hooks & interceptors
+* Protected routes with redirect handling
+* Centralized auth logic via hooks & API interceptors
 
 ### 🛍️ Product Browsing
 
@@ -84,9 +78,9 @@ apps/frontend-customer/
 
 ### 📦 Product Details
 
-* Individual product pages
-* Backend-driven data
-* Fallback handling for missing images
+* Individual product detail pages
+* Backend-driven data fetching
+* Graceful fallback handling for missing images
 
 ### 🛒 Cart & Checkout
 
@@ -104,41 +98,41 @@ apps/frontend-customer/
   * `Completed`
   * `Cancelled`
 * Cancel pending orders
-* Displays order items & total price
+* Displays order items and total price
 
 ### 🔔 Notifications
 
-* Success & error notifications
+* Success and error notifications
 * User-friendly feedback for API actions
 
 ---
 
 ## 🧪 Testing
 
-This project includes **frontend test cases** using **Jest**.
+Frontend tests are implemented using **Jest**.
 
 ```bash
 npm install
 npm test
 ```
 
-Tests are located in:
+Tests are located at:
 
 ```bash
 apps/frontend-customer/tests/
 ```
 
-These tests help ensure:
+These tests are:
 
-* UI stability
-* Correct API interaction
-* CI-safe builds
+* CI-friendly
+* Fast to execute
+* Useful for catching UI regressions early
 
 ---
 
 ## 🐳 Docker Support
 
-The Customer frontend is **fully Dockerized**.
+The Customer frontend is **fully Dockerized** using a **Next.js standalone build**.
 
 ### Build Image
 
@@ -152,28 +146,73 @@ docker build -t framely-frontend-customer .
 docker run -p 3000:3000 framely-frontend-customer
 ```
 
-### With Docker Compose
+### Docker Compose
 
-This service is intended to run as part of the **root `docker-compose.yml`**, alongside:
+This service is designed to run using the **root `docker-compose.yml`** together with:
 
-* Backend API
-* Database
+* Framely Backend API
+* Database service
 * Admin frontend
 
 ---
 
-## 🌐 Backend API Integration
+## ⚙️ Runtime Configuration & Environment Variables (IMPORTANT)
 
-This frontend communicates with the **Framely Backend API**.
+All configuration is **externalized** and provided via **environment variables**.
+No environment-specific values are hardcoded in the source code or Docker image.
 
-The API base URL is injected via environment variables:
+---
+
+### 🔹 Required Environment Variables
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api/v1
 ```
 
-✔ No hardcoded URLs
-✔ Environment-driven configuration (Docker / CI / AKS compatible)
+| Variable                   | Description                         |
+| -------------------------- | ----------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL of the Framely Backend API |
+
+📌 This value is:
+
+* Injected during Docker build (CI / Jenkins)
+* Defined in `docker-compose.yml` for local usage
+* Controlled via CI/CD pipelines for AKS deployments
+
+---
+
+### 🔹 Optional Environment Variables
+
+```env
+NEXT_PUBLIC_BASE_PATH=/app
+```
+
+| Variable                | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `NEXT_PUBLIC_BASE_PATH` | Enables path-based routing (used only for local development) |
+
+📌 **Routing Behavior**
+
+* Local / Docker / KIND → `/app`
+* AKS / Production → **unset** (customer app runs on a subdomain)
+
+---
+
+### 🔹 Build-Time vs Runtime Configuration
+
+⚠️ **Important Next.js Behavior**
+
+* `NEXT_PUBLIC_*` variables are **compiled into the build**
+* Any change requires a **new Docker image build**
+* This behavior is **intentional and expected**
+
+---
+
+## 🔐 Security Notes
+
+* No secrets are stored in this frontend
+* JWT tokens are handled client-side
+* All authorization and validation logic is enforced by the backend API
 
 ---
 
@@ -186,25 +225,16 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api/v1
 
 ### CI/CD
 
-* GitHub Actions
-* Automated builds & deployments
-* Environment-based configs
+* **Jenkins-based pipelines**
+* Versioned Docker images
+* GitOps-driven deployments
 
-### Production
+### Kubernetes (AKS)
 
-* Azure Static Web Apps (current)
-* AKS-ready for future scaling
-
----
-
-## 🔐 Security & Configuration
-
-* No secrets committed to the repository
-* Environment variables used for:
-
-  * API base URL
-  * Runtime configuration
-* JWT handled securely via client interceptors
+* Deployed via **ArgoCD**
+* Ingress-managed routing
+* Same container image across environments
+* Production-grade rollout control via GitOps
 
 ---
 
@@ -212,15 +242,12 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api/v1
 
 * This is the **customer-facing frontend** of the Framely platform
 * Built as part of an **end-to-end DevOps Mega Project**
-* Designed to work seamlessly with:
-
-  * Docker
-  * Kubernetes (AKS)
-  * Azure Cloud services
+* Designed for **Docker, AKS, and GitOps-first workflows**
+* Safe to rebuild, redeploy, and scale horizontally
 
 ---
 
-## 🎯 Next Planned Enhancements
+## 🎯 Future Enhancements
 
 * Payment gateway integration
 * Advanced checkout flow

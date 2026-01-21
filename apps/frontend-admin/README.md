@@ -1,4 +1,5 @@
 
+
 ---
 
 # 👓 Framely Admin Frontend (Admin Dashboard)
@@ -11,23 +12,23 @@ It allows **ADMIN users** to manage:
 * Categories
 * Products
 * Orders
-* Product images (via Blob Storage – backend dependent)
+* Product images (via backend Blob Storage APIs)
 
-This frontend is built with **Next.js (App Router)** and is intended to run:
+The application is built using **Next.js (App Router)** and is designed to run consistently across:
 
-* Locally via **Docker / Docker Compose**
-* In production via **Azure Static Web Apps**
-* Inside **AKS** as part of an end-to-end GitOps workflow
+* Local development using **Docker / Docker Compose**
+* Kubernetes (**AKS**) using **GitOps (ArgoCD)**
+* Cloud-native production environments
 
 ---
 
 ## 📌 Project Status
 
-* ✅ **Core Admin Features Implemented**
-* ✅ **Dockerized**
-* ✅ **Unit & Component Tests Added**
-* ✅ **Integrated with Framely Backend API**
-* 🚀 **Production-ready for AKS / Azure Static Web Apps**
+* ✅ Core admin features implemented
+* ✅ Fully Dockerized (multi-stage, standalone build)
+* ✅ Unit & component tests added
+* ✅ Integrated with Framely Backend API
+* 🚀 **Production-ready for AKS deployments**
 
 ---
 
@@ -37,35 +38,35 @@ This frontend is built with **Next.js (App Router)** and is intended to run:
 * **TypeScript**
 * **Tailwind CSS**
 * **Axios** – centralized API client
-* **JWT-based Auth (Admin only)**
+* **JWT-based authentication (Admin only)**
 * **Jest** – unit & component testing
 * **Docker** – containerized build & runtime
 
 ---
 
-## 📂 Directory Structure (Current)
+## 📂 Directory Structure
 
 ```bash
 apps/frontend-admin/
-├── Dockerfile            # Production-ready Dockerfile
+├── Dockerfile            # Production-ready Dockerfile (Next.js standalone)
 ├── README.md             # Project documentation
-├── VERSION               # App versioning
+├── VERSION               # Application version
 ├── package.json
 ├── package-lock.json
 ├── jest.config.js        # Jest configuration
 ├── babel.config.js
-├── next.config.ts
+├── next.config.ts        # Routing & build configuration
 ├── tailwind.config.js
 ├── tsconfig.json
 ├── src/                  # Application source code
-└── test/                 # ✅ Test cases (Jest)
+└── test/                 # Unit & component tests
 ```
 
-✅ **Important Notes**
+### Important Notes
 
-* All **test cases live inside `/test`**
-* **Dockerfile is present at root of this directory**
-* No external setup needed to containerize this app
+* All test cases are located under `/test`
+* Dockerfile is maintained at the root of this directory
+* No additional setup is required to containerize this application
 
 ---
 
@@ -73,64 +74,64 @@ apps/frontend-admin/
 
 ### 📊 Admin Dashboard
 
-* High-level overview of system data
-* Reusable cards & tables
-* Responsive layout
+* High-level system overview
+* Reusable UI components (cards, tables)
+* Responsive and mobile-friendly layout
 
 ### 📂 Category Management
 
 * Create / update / delete categories
-* Search & filter support
-* Clean UI with modals
+* Search and filter support
+* Modal-driven UI for clean UX
 
 ### 🛍️ Product Management
 
-* Full CRUD on products
-* Category & brand filtering
+* Full CRUD operations
+* Category-based filtering
 * Pagination & search
-* Image upload handled by backend Blob APIs
+* Product image upload via backend APIs
 
 ### 📦 Order Management
 
-* View all orders
+* View and manage all orders
 * Update order status
 * View order details
-* Delete orders (admin-only)
+* Admin-only delete operations
 
 ### 🔐 Authentication & Authorization
 
 * Admin-only access
 * JWT-based authentication
-* Protected routes
+* Route-level protection
 
 ---
 
 ## 🧪 Testing
 
-This project includes **frontend test cases** using **Jest**.
+Frontend tests are implemented using **Jest**.
 
 ```bash
 npm install
 npm test
 ```
 
-Tests are located in:
+Tests are located at:
 
 ```bash
 apps/frontend-admin/test/
 ```
 
-These tests are designed to:
+These tests are:
 
-* Validate components
-* Catch regressions early
-* Be CI-friendly
+* CI-friendly
+* Fast to execute
+* Useful for catching UI regressions early
 
 ---
 
 ## 🐳 Docker Support
 
-This frontend is **fully Dockerized**.
+The Admin frontend is **fully Dockerized** using a **Next.js standalone build**.
 
 ### Build Image
 
@@ -144,27 +145,73 @@ docker build -t framely-admin .
 docker run -p 3001:3000 framely-admin
 ```
 
-### With Docker Compose
+### Docker Compose
 
-This service is designed to run via the **root `docker-compose.yml`** along with:
+This service is designed to run using the **root `docker-compose.yml`** together with:
 
-* Backend API
-* Database
-* Other frontends
+* Framely Backend API
+* Database service
+* Other frontend applications
 
 ---
 
-## 🌐 Backend API Integration
+## ⚙️ Runtime Configuration & Environment Variables (IMPORTANT)
 
-The Admin frontend communicates with the **Framely Backend API**.
+All configuration is **injected at build or runtime via environment variables**.
+No environment-specific values are hardcoded in the source code or Docker image.
 
-The API base URL is injected via environment variable:
+---
+
+### 🔹 Required Environment Variables
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8081/api/v1
 ```
 
-Configured inside Docker Compose and CI pipelines — **no hardcoded URLs**.
+| Variable                   | Description                         |
+| -------------------------- | ----------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | Base URL of the Framely Backend API |
+
+📌 This value is:
+
+* Injected during Docker build (CI / Jenkins)
+* Defined in `docker-compose.yml` for local usage
+* Controlled via CI/CD pipelines for AKS
+
+---
+
+### 🔹 Optional Environment Variables
+
+```env
+NEXT_PUBLIC_BASE_PATH=/admin
+```
+
+| Variable                | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `NEXT_PUBLIC_BASE_PATH` | Enables path-based routing (used only for local development) |
+
+📌 **Important Behavior**
+
+* Local / Docker Compose → `/admin`
+* AKS / Production → **unset** (admin runs on a subdomain)
+
+---
+
+### 🔹 Build-Time vs Runtime Configuration
+
+⚠️ **Important Next.js Behavior**
+
+* `NEXT_PUBLIC_*` variables are **baked into the build**
+* Any change requires a **new Docker image build**
+* This behavior is **intentional and expected**
+
+---
+
+### 🔐 Security Notes
+
+* No secrets are stored in this frontend
+* JWT tokens are handled client-side
+* All sensitive logic is enforced by the backend API
 
 ---
 
@@ -172,48 +219,37 @@ Configured inside Docker Compose and CI pipelines — **no hardcoded URLs**.
 
 ### Local Development
 
-* Docker / Docker Compose
+* Docker
+* Docker Compose
 
 ### CI/CD
 
-* GitHub Actions
-* Image build & push
-* Environment-based configuration
+* **Jenkins-based pipelines**
+* Versioned Docker images
+* GitOps-driven deployments
 
-### Production
+### Kubernetes (AKS)
 
-* Azure Static Web Apps (current)
-* AKS (planned / scalable path)
-
----
-
-## 🔐 Security & Config
-
-* No secrets committed in repo
-* Environment variables used for:
-
-  * API URLs
-  * Auth tokens
-* JWT handled securely on client side
+* Deployed via **ArgoCD**
+* Ingress-managed routing
+* Environment parity across stage & prod
+* Controlled rollout using GitOps
 
 ---
 
 ## 📝 Notes
 
-* This Admin frontend is **part of a larger DevOps Mega Project**
-* Designed with **AKS, GitOps (ArgoCD), and CI/CD pipelines** in mind
-* Fully compatible with:
-
-  * Docker
-  * Kubernetes
-  * Azure Cloud
+* This Admin frontend is part of a **larger end-to-end DevOps project**
+* Designed for **AKS, GitOps, and CI/CD-first workflows**
+* Safe to rebuild, redeploy, and scale horizontally
+* No environment-specific code paths
 
 ---
 
-## 🎯 Next Planned Enhancements
+## 🎯 Future Enhancements
 
 * Advanced analytics dashboard
-* Role-based access control (RBAC)
+* Role-based UI permissions
 * Audit logs
 * Performance optimizations
 
