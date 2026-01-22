@@ -1,9 +1,15 @@
+# ------------------------------------------------------------
 # Resource Group Outputs
-output "resource_group_id" {
-  description = "The ID of the Resource Group."
-  value       = azurerm_resource_group.main.id
+# ------------------------------------------------------------
+
+# Resource Group ID
+output "id" {
+  description = "ID of the Azure Resource Group"
+  value       = azurerm_resource_group.this.id
 }
-output "resource_group_name" {
-  description = "The name of the Resource Group."
-  value       = azurerm_resource_group.main.name
+
+# Resource Group name
+output "name" {
+  description = "Name of the Azure Resource Group"
+  value       = azurerm_resource_group.this.name
 }

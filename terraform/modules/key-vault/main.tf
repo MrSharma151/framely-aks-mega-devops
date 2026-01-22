@@ -23,9 +23,8 @@ resource "azurerm_key_vault" "this" {
   # Azure tenant ID
   tenant_id = var.tenant_id
 
-  # Enable RBAC authorization instead of access policies
-  # This aligns with modern Azure security best practices
-  enable_rbac_authorization = true
+  # RBAC authorization is now enabled by default in recent provider versions.
+  # No need to set enable_rbac_authorization.
 
   # SKU selection
   sku_name = "standard"

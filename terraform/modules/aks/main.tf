@@ -50,9 +50,6 @@ resource "azurerm_kubernetes_cluster" "this" {
 
     # Subnet where AKS nodes will be placed
     vnet_subnet_id = var.aks_subnet_id
-
-    # Node pool mode must be System
-    mode = "System"
   }
 
 
@@ -113,19 +110,13 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   # Name of the user node pool
   name = "user"
 
-  # Resource Group of AKS
-  resource_group_name = var.resource_group_name
-
   # AKS cluster ID
   kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
 
   # VM size for application workloads
   vm_size = var.user_node_vm_size
 
-  # Enable autoscaling for application workloads
-  enable_auto_scaling = true
-
-  # Minimum and maximum number of nodes
+  # Minimum and maximum number of nodes (enables autoscaling)
   min_count = var.user_node_min_count
   max_count = var.user_node_max_count
 

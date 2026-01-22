@@ -36,11 +36,8 @@ resource "azurerm_storage_account" "this" {
   account_tier = "Standard"
 
   # Replication type
-  # LRS is sufficient for stage and interview use
+  # LRS is sufficient for stage and personal project use
   account_replication_type = "LRS"
-
-  # Enforce HTTPS for security
-  enable_https_traffic_only = true
 
   # Minimum TLS version
   min_tls_version = "TLS1_2"
@@ -60,8 +57,8 @@ resource "azurerm_storage_container" "containers" {
   # Container name
   name = each.value
 
-  # Storage account name
-  storage_account_name = azurerm_storage_account.this.name
+  # Storage account id
+  storage_account_id = azurerm_storage_account.this.id
 
   # Access level: private (no anonymous access)
   container_access_type = "private"
