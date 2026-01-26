@@ -1,191 +1,359 @@
-bilkul bhai 👍
-Root `README.md` **sabse zyada important file** hoti hai — ye hi first impression deta hai.
-Tumhara current README **outdated + misaligned** tha (status, branching, scope sab change ho chuka hai).
 
-Neeche main **completely rewritten, final, professional root README** de raha hoon.
-Tone वही है jo baaki docs me set ho chuki hai: **clean, factual, enterprise-style**.
 
-Tum isse **direct replace** kar sakte ho.
+# 📘 Terraform Infrastructure
+
+## Framely – Mega DevOps AKS Project
 
 ---
 
-# 📦 Framely – Mega DevOps AKS Project
+## 🎯 Purpose of This Directory
 
-This repository contains a **production-grade, cloud-native DevOps implementation** of the **Framely e-commerce platform**, designed around **Kubernetes, GitOps, and modern CI/CD practices** on Azure.
+This directory contains **all Terraform code** responsible for provisioning **Azure infrastructure** for the Framely platform.
 
-The project demonstrates **how to design, build, and operate a real-world application platform** using:
+Terraform provisions the **foundational cloud platform**, while application delivery is handled separately through:
 
-* Containerized workloads
-* Kubernetes (AKS)
-* GitOps-based delivery
-* Strong separation of concerns across CI, CD, and infrastructure
+* **CI:** Jenkins
+* **CD:** ArgoCD (GitOps)
 
-This repository is intended as a **hands-on DevOps reference project**, not a demo or toy implementation.
+> Terraform builds infrastructure.
+> Jenkins produces artifacts and updates Git.
+> ArgoCD deploys declared state to Kubernetes.
 
----
-
-## 🎯 Purpose of This Repository
-
-The goal of this project is to showcase:
-
-* End-to-end DevOps architecture on Azure
-* Production-aligned CI/CD workflows
-* GitOps-based Continuous Delivery using ArgoCD
-* Secure, deterministic Kubernetes deployments
-* Environment isolation and promotion strategies
-* Infrastructure-as-Code with clear operational boundaries
-
-This repository focuses on **how the platform is built and delivered**, not on application feature development.
+This separation of responsibilities is **intentional and production-aligned**.
 
 ---
 
-## 🔗 Related Project (PaaS-Based Implementation)
+## 🧱 Scope of Terraform
 
-The original Framely application is implemented using **Azure PaaS services**.
+Terraform is responsible for provisioning and managing:
 
-👉 **Original PaaS Repository**
-[https://github.com/MrSharma151/Framely.git](https://github.com/MrSharma151/Framely.git)
-
-That repository demonstrates:
-
-* Azure App Service
-* Azure Static Web Apps
-* Azure SQL Database
-* Azure Blob Storage
-* GitHub Actions–based CI/CD
-
-The PaaS implementation remains unchanged.
-This repository explores the **Kubernetes + GitOps alternative** for the same application.
+* Azure Resource Groups
+* Virtual Networks, Subnets, and Network Security Groups
+* Azure Kubernetes Service (AKS) clusters and node pools
+* Jenkins Virtual Machine (CI runner)
+* Azure Container Registry (ACR)
+* Azure Key Vault
+* Azure SQL Server and Database
+* Azure Storage Account (Blob)
+* Log Analytics Workspace
+* Managed Identities and role assignments
 
 ---
 
-## 🧱 High-Level Platform Overview
+### ❌ Out of Scope
 
-### Application Layer
+Terraform explicitly does **not**:
 
-* Backend API: ASP.NET Core (stateless)
-* Frontend (Customer): Next.js
-* Frontend (Admin): Next.js
-* Database: Azure SQL Database
-* Object Storage: Azure Blob Storage
+* Deploy application workloads
+* Apply Kubernetes manifests
+* Install Helm charts
+* Configure or manage ArgoCD
+* Configure Jenkins (handled via Ansible)
+* Execute from Jenkins pipelines during the initial phase
 
-### DevOps & Platform Stack
+This ensures:
 
-* Docker (containerization)
-* Kubernetes (AKS)
-* Kustomize (application manifests)
-* Jenkins (Continuous Integration)
-* ArgoCD (GitOps-based Continuous Delivery)
-* Terraform (Azure infrastructure provisioning)
-* Ansible (Jenkins VM configuration)
-* Prometheus & Grafana (application observability)
-* Azure Log Analytics (infrastructure monitoring)
+* Predictable infrastructure lifecycle
+* Clean GitOps execution
+* Reduced blast radius
+* Clear operational ownership
 
 ---
 
-## 🌿 Repository Structure (Overview)
+## 📂 Directory Structure
 
 ```text
-framely/
-├── apps/           # Application source code and Docker images
-├── jenkins/        # CI pipelines and shared libraries
-├── argocd/         # GitOps configuration (projects & applications)
-├── kubernetes/     # Kubernetes manifests (stage & prod)
-├── terraform/      # Azure infrastructure (IaC)
-├── ansible/        # Jenkins VM configuration
-├── monitoring/     # Observability documentation
-├── docs/           # Architecture and workflow documentation
-└── Jenkinsfile     # CI entry point
+terraform/
+├── modules/                     # Reusable, environment-agnostic modules
+│   ├── resource-group/          # Azure Resource Groups
+│   ├── network/                 # VNet, Subnets, NSGs
+│   ├── aks/                     # AKS cluster and node pools
+│   ├── jenkins-vm/              # Jenkins CI virtual machine
+│   ├── acr/                     # Azure Container Registry
+│   ├── key-vault/               # Azure Key Vault
+│   ├── sql/                     # Azure SQL Server and Database
+│   ├── storage/                 # Storage Account and Blob containers
+│   ├── log-analytics/           # Log Analytics Workspace
+│   └── identities/              # IAM and role assignments
+│
+├── environments/                # Environment-specific composition
+│   ├── stage/
+│   │   ├── backend.tf           # Remote state configuration
+│   │   ├── providers.tf
+│   │   ├── variables.tf
+│   │   ├── terraform.tfvars
+│   │   └── main.tf              # Module wiring
+│   │
+│   └── prod/
+│       ├── backend.tf
+│       ├── providers.tf
+│       ├── variables.tf
+│       ├── terraform.tfvars
+│       └── main.tf
+│
+├── versions.tf                  # Terraform and provider version pinning
+└── README.md
 ```
 
-Each directory contains its own `README.md` with detailed, authoritative documentation.
+---
+
+## 🌍 Environment Strategy
+
+### Environment Isolation Model
+
+| Environment | Resource Group     | AKS Cluster         | Terraform State |
+| ----------- | ------------------ | ------------------- | --------------- |
+| Stage       | `rg-framely-stage` | `aks-framely-stage` | Isolated        |
+| Prod        | `rg-framely-prod`  | `aks-framely-prod`  | Isolated        |
+
+Each environment is:
+
+* Fully isolated
+* Structurally identical
+* Independently manageable
+
+This prevents cross-environment impact and mirrors real production setups.
 
 ---
 
-## 🌿 Branching & Environment Model
+## 🔐 Terraform State Management
 
-This repository uses an **environment-aligned branching strategy**:
+Terraform uses an **Azure Storage remote backend**.
 
-| Branch  | Purpose                               | Environment |
-| ------- | ------------------------------------- | ----------- |
-| `main`  | Design validation and source of truth | None        |
-| `stage` | Integration and pre-production        | Stage       |
-| `prod`  | Stable, controlled releases           | Production  |
+### Rationale
 
-* CI behavior varies by branch
-* All deployments are driven via **GitOps**
-* Jenkins never deploys directly to Kubernetes
-* ArgoCD is the only deployment engine
+* Prevents accidental state loss
+* Enables state locking
+* Required for safe collaboration
+* Standard production practice
 
-Details are documented in:
-📘 `docs/BRANCHING-AND-CI-CD-WORKFLOW-STRATEGY.md`
+### Backend Layout
 
----
+```text
+Azure Storage Account
+└── Blob Container
+    ├── stage/terraform.tfstate
+    └── prod/terraform.tfstate
+```
 
-## ☸️ GitOps Delivery Model
-
-* Git defines the desired state
-* Jenkins updates Git (image tags only)
-* ArgoCD reconciles Kubernetes clusters
-* No manual `kubectl apply` for application workloads
-* Environment promotion occurs via Git commits
-
-This ensures deterministic, auditable deployments.
+Backend resources are bootstrapped once, which is standard Terraform practice.
 
 ---
 
-## 🧪 Local Development & Validation
+## 🌐 Networking Architecture
 
-The project can be fully validated on a **single Linux machine** without AKS.
+### Virtual Network
 
-Supported local workflows include:
+* One VNet per environment
+* Example CIDR: `10.0.0.0/16`
 
-* Docker Compose–based application testing
-* Local Kubernetes using KIND
-* Jenkins CI execution
-* ArgoCD-based GitOps validation
+### Subnet Design
 
-Setup instructions are documented in:
-📘 `docs/LOCAL-DEV-SETUP.md`
+| Subnet              | Purpose              | Resources                      |
+| ------------------- | -------------------- | ------------------------------ |
+| `subnet-aks`        | Kubernetes workloads | AKS system and user node pools |
+| `subnet-jenkins-vm` | CI infrastructure    | Jenkins virtual machine        |
+
+### Design Rationale
+
+* Clear separation between Kubernetes and non-Kubernetes compute
+* Simple security boundaries
+* Reduced operational complexity
+* Cost-aware design
+
+### Excluded from Subnets
+
+* Azure SQL Database
+* Storage Account
+* Key Vault
+
+These services use public endpoints with firewall restrictions.
+Private endpoints are intentionally deferred.
 
 ---
 
-## 📚 Documentation Index
+## ☸️ AKS Architecture
 
-Authoritative documentation is available under the `docs/` directory:
+### Cluster Design
 
-* `ARCHITECTURE-OVERVIEW.md` – High-level system architecture
-* `BRANCHING-AND-CI-CD-WORKFLOW-STRATEGY.md` – Code flow and CI/CD behavior
-* `LOCAL-DEV-SETUP.md` – End-to-end local setup guide
+* One AKS cluster per environment
+* Azure CNI networking
+* System-assigned managed identity
+* Integrated with Log Analytics
 
-Each major module (`apps`, `jenkins`, `argocd`, `kubernetes`, `terraform`, `ansible`) also contains its own README.
+### Node Pools
+
+**System Node Pool**
+
+* Hosts Kubernetes system components
+* Fixed size
+* Autoscaling disabled
+
+**User Node Pool**
+
+* Hosts application workloads
+* Autoscaling enabled
+* Cost-controlled limits
+
+Node pools are intentionally not over-segmented.
+
+---
+
+## 🖥 Jenkins Virtual Machine
+
+### Purpose
+
+Jenkins runs on a **dedicated Azure VM**, outside the AKS cluster.
+
+This enforces a strict separation between:
+
+* CI execution
+* Application runtime environments
+
+### Responsibilities
+
+Jenkins performs:
+
+* Test execution
+* Security scanning
+* Docker image builds
+* Image pushes to ACR
+* GitOps manifest updates via Git commits
+
+Jenkins does **not**:
+
+* Deploy workloads
+* Execute `kubectl`
+* Interact directly with AKS
+
+### Characteristics
+
+* VM size: Cost-optimized
+* OS: Ubuntu LTS
+* Network: `subnet-jenkins-vm`
+* Public IP: Enabled with restricted NSG
+* Configuration: Managed via **Ansible**
+
+---
+
+## 🐳 Azure Container Registry (ACR)
+
+### Purpose
+
+* Central container image registry
+* Immutable image tagging
+* Shared by Jenkins and AKS
+
+### Access Model
+
+| Actor   | Access                           |
+| ------- | -------------------------------- |
+| Jenkins | Push images                      |
+| AKS     | Pull images via managed identity |
+
+No admin user is enabled.
+No registry credentials are stored in Terraform.
+
+---
+
+## 🔑 Identity and Access Management
+
+### Managed Identity Strategy
+
+* AKS uses system-assigned managed identity
+* Role assignments managed via Terraform:
+
+  * `AcrPull` on ACR
+  * Key Vault read access
+  * Log Analytics permissions
+
+This avoids secrets and aligns with Azure best practices.
+
+---
+
+## 🗝 Azure Key Vault
+
+### Purpose
+
+* Centralized infrastructure secret store
+
+### Usage Model
+
+* Key Vault is provisioned via Terraform
+* Secrets may be added post-provisioning
+* Applications consume secrets via Kubernetes Secrets
+
+CSI driver integration is deferred for future enhancement.
+
+---
+
+## 🗄 Azure SQL Database
+
+### Design
+
+* Azure SQL Server with a single database
+* Cost-optimized tier
+* Public endpoint with firewall restrictions
+
+Private endpoints are intentionally deferred.
+
+---
+
+## 🧺 Azure Storage Account (Blob)
+
+### Purpose
+
+* Application file storage
+* Media uploads and exports
+
+### Access Model
+
+* Connection strings (current)
+* Managed identity (future)
+
+---
+
+## 📊 Observability Integration
+
+### Log Analytics Workspace
+
+* Integrated with AKS
+* Cluster and node monitoring
+* Infrastructure diagnostics
+
+Application metrics are handled separately via Prometheus and Grafana.
 
 ---
 
 ## 🧠 Design Philosophy
 
-This project prioritizes:
+This Terraform architecture prioritizes:
 
-* Clear separation of concerns
-* Git as the control plane
-* Deterministic and reproducible workflows
-* Cost-aware infrastructure design
-* Production realism over over-engineering
+* Clarity over abstraction
+* Predictability over flexibility
+* Cost awareness
+* Production realism
 
-The architecture is intentionally minimal, explicit, and auditable.
-
----
-
-## 🧾 License
-
-This project is licensed under the **MIT License**.
+Over-engineering is intentionally avoided.
 
 ---
 
-## 👤 Author
+## 🚀 Execution Strategy
 
-**Rohit Sharma**
-Devops Engineer - https://rohitsharma.org
+1. Provision **Stage** infrastructure
+2. Validate CI → GitOps → ArgoCD → AKS flow
+3. Maintain **Prod** configuration parity
+4. Avoid provisioning Prod to control cost
 
 ---
 
+## 🏁 Final Notes
+
+* Infrastructure is fully defined as code
+* Clear separation of concerns is enforced
+* GitOps-native application delivery is preserved
+* Foundations are secure, minimal, and scalable
+
+This directory defines the **authoritative Azure infrastructure model** for the Framely platform.
+
+---
