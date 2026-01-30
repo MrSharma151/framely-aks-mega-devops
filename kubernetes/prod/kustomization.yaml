@@ -28,16 +28,15 @@ resources:
 # Jenkins updates ONLY the tag via GitOps
 # Manual approval happens before prod tag update
 # ----------------------------------------------------------------------
+
+
 images:
 - name: framely-backend
   newName: acrframelystage.azurecr.io/framely-backend
-  newTag: 0.1.0-2b27f5d
-
+  newTag: 0.1.0-8825bd2
 - name: framely-frontend-admin
   newName: acrframelystage.azurecr.io/framely-frontend-admin
   newTag: 0.1.0-2b27f5d
-
 - name: framely-frontend-customer
   newName: acrframelystage.azurecr.io/framely-frontend-customer
   newTag: 0.1.0-2b27f5d
-
