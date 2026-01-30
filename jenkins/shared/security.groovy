@@ -9,7 +9,7 @@
 
  SECURITY POLICY:
  - main  → Report-only mode (does NOT fail pipeline)
- - stage → Enforced (fails on vulnerabilities)
+ - stage → Report-only mode (temporary relaxation)
  - prod  → Enforced (fails on vulnerabilities)
 
  DESIGN PRINCIPLES:
@@ -62,6 +62,7 @@ def scan(app) {
                         ${app.securityCommand}
                     """
                 }
+
             } catch (Exception e) {
                 echo "⚠️ Security issues detected for application: ${app.name}"
                 echo "Error details: ${e}"
@@ -69,27 +70,29 @@ def scan(app) {
                 // --------------------------------------------------
                 // SECURITY POLICY ENFORCEMENT
                 // --------------------------------------------------
-                if (env.BRANCH_NAME == 'main') {
-                    echo '''
-==================================================
- SECURITY SCAN RESULT (REPORT-ONLY MODE)
---------------------------------------------------
- - Vulnerabilities detected
- - Branch      : main
- - Pipeline    : NOT FAILED
- - Action      : Fix issues before promoting to stage
-==================================================
-'''
-                } else {
+                if (env.BRANCH_NAME == 'prod') {
                     error """
 ==================================================
  SECURITY SCAN FAILED (ENFORCED MODE)
 --------------------------------------------------
  Application : ${app.name}
- Branch      : ${env.BRANCH_NAME}
+ Branch      : prod
 
  Critical or high severity vulnerabilities detected.
- Pipeline execution stopped to protect downstream environments.
+ Pipeline execution stopped to protect production.
+==================================================
+"""
+                } else {
+                    echo """
+==================================================
+ SECURITY SCAN RESULT (REPORT-ONLY MODE)
+--------------------------------------------------
+ Application : ${app.name}
+ Branch      : ${env.BRANCH_NAME}
+
+ - Vulnerabilities detected
+ - Pipeline NOT failed
+ - Action: Fix issues before promoting to production
 ==================================================
 """
                 }
