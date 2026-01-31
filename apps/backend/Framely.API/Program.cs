@@ -16,6 +16,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Reads secrets from /mnt/secrets/<key> and injects into IConfiguration
+builder.Configuration.AddKeyPerFile("/mnt/secrets", optional: true);
+
 // Step 1: Add Controllers
 builder.Services.AddControllers();
 
