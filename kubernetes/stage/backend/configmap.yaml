@@ -27,19 +27,13 @@ data:
   Swagger__Enabled: "true"
 
   # ------------------------------------------------------------
-  # CORS Configuration (Stage - AKS subdomains)
-  # IMPORTANT: must match Ingress domains
+  # CORS Configuration (Stage - AKS Ingress domains)
   # ------------------------------------------------------------
-  FrontendOrigins__0: "https://admin.<domain>"
-  FrontendOrigins__1: "https://app.<domain>"
+  FrontendOrigins__0: "https://framely-admin-sg.rohitsharma.org"
+  FrontendOrigins__1: "https://framely-sg.rohitsharma.org"
 
   # ------------------------------------------------------------
   # Application Flags
   # ------------------------------------------------------------
   SeedAdmin: "true"
 
-  # ------------------------------------------------------------
-  # Azure Blob Storage (NON-SECRET)
-  # ------------------------------------------------------------
-  Storage__Container: "uploads"
-  Storage__Name: "<storage-account-name>"
