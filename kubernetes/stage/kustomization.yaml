@@ -40,7 +40,7 @@ images:
   newTag: 0.1.0-a913e50
 - name: framely-frontend-admin
   newName: acrframelystage.azurecr.io/framely-frontend-admin
-  newTag: 0.1.0-04fead0
+  newTag: 0.1.0-a913e50
 - name: framely-frontend-customer
   newName: acrframelystage.azurecr.io/framely-frontend-customer
   newTag: 0.1.0-04fead0
