@@ -23,13 +23,16 @@ pipeline {
     }
 
     environment {
-        PROJECT_NAME = "framely"
+        PROJECT_NAME = "Framely – Mega DevOps AKS Project"
 
         PIPELINES_DIR = "jenkins/pipelines"
         CONFIG_DIR    = "jenkins/config"
 
         // CRITICAL FLAG TO STOP GITOPS LOOPS
         SKIP_CI = "false"
+
+        // Email recipients (can be expanded later)
+        NOTIFY_EMAIL = "yourgmail@gmail.com"
     }
 
     stages {
@@ -162,13 +165,60 @@ Allowed branches:
         }
     }
 
+    /*
+    ================================================================
+    EMAIL NOTIFICATIONS (Email Extension Plugin)
+    ================================================================
+    */
     post {
+
         success {
-            echo "✅ Pipeline completed successfully for branch: ${env.BRANCH_NAME}"
+            emailext(
+                to: "${env.NOTIFY_EMAIL}",
+                subject: "✅ SUCCESS | ${env.PROJECT_NAME} | ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}",
+                body: """
+                <h2 style="color:green;">Build Successful ✅</h2>
+                <p><b>Project:</b> ${env.PROJECT_NAME}</p>
+                <p><b>Branch:</b> ${env.BRANCH_NAME}</p>
+                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                <p><b>Status:</b> SUCCESS</p>
+                <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                <hr/>
+                <p>This is an automated notification from Jenkins.</p>
+                """
+            )
         }
 
         failure {
-            echo "❌ Pipeline failed for branch: ${env.BRANCH_NAME}"
+            emailext(
+                to: "${env.NOTIFY_EMAIL}",
+                subject: "❌ FAILURE | ${env.PROJECT_NAME} | ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}",
+                body: """
+                <h2 style="color:red;">Build Failed ❌</h2>
+                <p><b>Project:</b> ${env.PROJECT_NAME}</p>
+                <p><b>Branch:</b> ${env.BRANCH_NAME}</p>
+                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                <p><b>Status:</b> FAILURE</p>
+                <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                <hr/>
+                <p>Please review the Jenkins logs to identify the root cause.</p>
+                """
+            )
+        }
+
+        unstable {
+            emailext(
+                to: "${env.NOTIFY_EMAIL}",
+                subject: "⚠️ UNSTABLE | ${env.PROJECT_NAME} | ${env.BRANCH_NAME} | Build #${env.BUILD_NUMBER}",
+                body: """
+                <h2 style="color:orange;">Build Unstable ⚠️</h2>
+                <p><b>Project:</b> ${env.PROJECT_NAME}</p>
+                <p><b>Branch:</b> ${env.BRANCH_NAME}</p>
+                <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                <p><b>Status:</b> UNSTABLE</p>
+                <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                """
+            )
         }
 
         always {
