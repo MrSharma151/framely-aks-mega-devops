@@ -16,9 +16,6 @@ spec:
       labels:
         app: backend
     spec:
-      # ------------------------------------------------------------
-      # BACKEND CONTAINER
-      # ------------------------------------------------------------
       containers:
         - name: backend
           image: framely-backend:latest
@@ -37,46 +34,22 @@ spec:
               drop:
                 - ALL
           # NOTE:
-          # readOnlyRootFilesystem REMOVED
-          # ASP.NET Core may need /tmp access on AKS
+          # readOnlyRootFilesystem intentionally NOT enabled
+          # ASP.NET Core needs /tmp access on AKS
 
           # ------------------------------------------------------------
           # ENVIRONMENT VARIABLES
           # ------------------------------------------------------------
-          # Non-secret config from ConfigMap
+          # Non-secret config ONLY (ConfigMap)
           envFrom:
             - configMapRef:
                 name: backend-config
 
-          # Secret values from Azure Key Vault (via CSI mounted files)
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                configMapKeyRef:
-                  name: backend-secrets
-                  key: ConnectionStrings__DefaultConnection
-
-            - name: JwtSettings__Secret
-              valueFrom:
-                configMapKeyRef:
-                  name: backend-secrets
-                  key: JwtSettings__Secret
-
-            - name: Storage__ConnectionString
-              valueFrom:
-                configMapKeyRef:
-                  name: backend-secrets
-                  key: Storage__ConnectionString
-
-            - name: Storage__Key
-              valueFrom:
-                configMapKeyRef:
-                  name: backend-secrets
-                  key: Storage__Key
-
           # ------------------------------------------------------------
-          # MOUNT AZURE KEY VAULT SECRETS (CSI)
+          # AZURE KEY VAULT SECRETS (CSI FILE MOUNT)
           # ------------------------------------------------------------
+          # Secrets are read from files:
+          # /mnt/secrets/<secret-name>
           volumeMounts:
             - name: secrets-store
               mountPath: /mnt/secrets
